@@ -40,6 +40,9 @@ public class FileServerProperties {
         return uriPrefix;
     }
 
+    /**
+     * 不同上传路径的配置对象
+     */
     private Properties local;
     private Properties ali;
     private Properties minio;
