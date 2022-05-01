@@ -54,6 +54,7 @@ public class LocalAutoConfig {
          */
         @Override
         protected void uploadFile(File file, MultipartFile multipartFile) throws Exception {
+            buildClient();
             String endpoint = properties.getEndpoint();
             String bucketName = properties.getBucketName();
             String uriPrefix = properties.getUriPrefix();
