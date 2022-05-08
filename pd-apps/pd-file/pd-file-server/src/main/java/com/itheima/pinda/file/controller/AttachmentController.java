@@ -3,6 +3,7 @@ package com.itheima.pinda.file.controller;
 import com.itheima.pinda.base.BaseController;
 import com.itheima.pinda.base.R;
 import com.itheima.pinda.file.dto.AttachmentDTO;
+import com.itheima.pinda.file.dto.AttachmentRemoveDTO;
 import com.itheima.pinda.file.service.AttachmentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -11,10 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -67,5 +65,31 @@ public class AttachmentController extends BaseController {
         // 执行文件上传逻辑
         AttachmentDTO attachmentDTO = attachmentService.upload(file, bizId, bizType, isSingle, id);
         return this.success(attachmentDTO);
+    }
+
+    /**
+     * 根據id刪除附件
+     * @param ids
+     * @return
+     */
+    @DeleteMapping
+    @ApiOperation(value = "刪除附件",notes = "刪除附件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "ids[]",value = "文件Ids",dataType = "array",paramType = "query")
+    })
+    public R<Boolean> remove(@RequestParam(value = "ids[]") Long[] ids){
+        attachmentService.remove(ids);
+        return this.success(true);
+    }
+
+    @ApiOperation(value = "根据业务类型或业务id删除文件",
+            notes = "根据业务类型或业务id删除文件")
+    @DeleteMapping(value = "/biz")
+    public R<Boolean> removeByBizIdAndBizType(
+            @RequestBody
+                    AttachmentRemoveDTO dto) {
+        attachmentService.removeByBizIdAndBizType(dto.getBizId(),
+                dto.getBizType());
+        return success(true);
     }
 }

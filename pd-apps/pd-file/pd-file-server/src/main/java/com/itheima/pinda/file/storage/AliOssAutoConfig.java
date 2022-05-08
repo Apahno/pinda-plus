@@ -71,7 +71,8 @@ public class AliOssAutoConfig {
             // 生成文件名
             String fileName = UUID.randomUUID().toString() + StrPool.DOT + file.getExt();
 
-            String relativePath = Paths.get(LocalDate.now().format(DateTimeFormatter.ofPattern(DateUtils.DEFAULT_MONTH_FORMAT_SLASH))).toString();
+            // Paths的话由于系统原因会变成2022\05 而不是2022/05
+            String relativePath = LocalDate.now().format(DateTimeFormatter.ofPattern(DateUtils.DEFAULT_MONTH_FORMAT_SLASH));    //这样才会是这种/
 
             // 服务器绝对路径
             String relativeFileName = relativePath + StrPool.SLASH + fileName;

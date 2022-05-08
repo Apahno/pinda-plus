@@ -1,11 +1,13 @@
 package com.itheima.pinda.file.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.pinda.base.id.IdGenerate;
 import com.itheima.pinda.database.mybatis.conditions.Wraps;
 import com.itheima.pinda.dozer.DozerUtils;
 import com.itheima.pinda.file.dao.AttachmentMapper;
+import com.itheima.pinda.file.domain.FileDeleteDO;
 import com.itheima.pinda.file.dto.AttachmentDTO;
 import com.itheima.pinda.file.entity.Attachment;
 import com.itheima.pinda.file.entity.File;
@@ -19,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -79,5 +84,56 @@ public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper,Attachme
         }
 
         return dozerUtils.map(attachment,AttachmentDTO.class);
+    }
+
+    /**
+     * 刪除附件
+     * @param ids
+     */
+    @Override
+    public void remove(Long[] ids) {
+        if(ArrayUtils.isEmpty(ids))
+        {
+            return;
+        }
+        // 查询文件路径
+        // select * from pd_attachment where id in
+        List<Attachment> list = super.list(Wrappers.<Attachment>lambdaQuery().in(Attachment::getId, ids));
+        // 从数据库中删除文件信息记录
+        super.removeByIds(Arrays.asList(ids));
+
+        // 对象格式转换处理
+        // list.stream.map((xx)-> ,意思是把list转成流，map就是把集合里面的每个元素取出来做加工
+        List<FileDeleteDO> fileDeleteDOList = list.stream().map((fi)->
+            FileDeleteDO.builder().relativePath(fi.getRelativePath())
+                    .fileName(fi.getFilename())
+                    .group(fi.getGroup())
+                    .path(fi.getPath())
+                    .build()
+        ).collect(Collectors.toList());
+
+        // 删除文件
+        fileStrategy.delete(fileDeleteDOList);
+    }
+
+    /**
+     * 根据业务类型或者业务Id删除附件
+     * @param bizId
+     * @param bizType
+     */
+    @Override
+    public void removeByBizIdAndBizType(String bizId, String bizType) {
+        //根据业务类和业务id查询数据库
+        List<Attachment> list = super.list(
+                Wraps.<Attachment>lbQ()
+                        .eq(Attachment::getBizId, bizId)
+                        .eq(Attachment::getBizType, bizType));
+        if (list.isEmpty()) {
+            return;
+        }
+
+        //根据id删除文件
+        remove(list.stream().mapToLong(
+                Attachment::getId).boxed().toArray(Long[]::new));
     }
 }

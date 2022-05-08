@@ -20,4 +20,17 @@ public interface AttachmentService {
             String bizType,
             Boolean isSingle,
             Long id);
+
+    /**
+     * 刪除附件
+     * @param ids
+     */
+    public void remove(Long[] ids);
+
+    /**
+     * 根据业务类型或者业务Id删除附件
+     * @param bizId
+     * @param bizType
+     */
+    void removeByBizIdAndBizType(String bizId, String bizType);
 }
