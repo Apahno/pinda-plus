@@ -4,6 +4,9 @@ import com.itheima.pinda.file.dto.AttachmentDTO;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 public interface AttachmentService {
     /**
      * 文件上传
@@ -33,4 +36,6 @@ public interface AttachmentService {
      * @param bizType
      */
     void removeByBizIdAndBizType(String bizId, String bizType);
+
+    public void download(HttpServletRequest request, HttpServletResponse response,Long[] ids) throws Exception;
 }

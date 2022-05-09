@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.pinda.base.id.IdGenerate;
 import com.itheima.pinda.database.mybatis.conditions.Wraps;
 import com.itheima.pinda.dozer.DozerUtils;
+import com.itheima.pinda.exception.BizException;
 import com.itheima.pinda.file.dao.AttachmentMapper;
+import com.itheima.pinda.file.domain.FileDO;
 import com.itheima.pinda.file.domain.FileDeleteDO;
 import com.itheima.pinda.file.dto.AttachmentDTO;
 import com.itheima.pinda.file.entity.Attachment;
@@ -14,12 +16,15 @@ import com.itheima.pinda.file.entity.File;
 import com.itheima.pinda.file.properties.FileServerProperties;
 import com.itheima.pinda.file.service.AttachmentService;
 import com.itheima.pinda.file.strategy.FileStrategy;
+import com.itheima.pinda.file.utils.FileBiz;
 import com.itheima.pinda.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +42,9 @@ public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper,Attachme
     private DozerUtils  dozerUtils;
     @Autowired
     private FileServerProperties properties;
+    @Autowired
+    private FileBiz fileBiz;
+
 
     /**
      * 文件上传
@@ -135,5 +143,23 @@ public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper,Attachme
         //根据id删除文件
         remove(list.stream().mapToLong(
                 Attachment::getId).boxed().toArray(Long[]::new));
+    }
+
+    @Override
+    public void download(HttpServletRequest request, HttpServletResponse response,Long[] ids) throws Exception {
+        // 根据文件id查询数据库
+        List<Attachment> list = (List<Attachment>) super.listByIds(Arrays.asList(ids));
+        if(list.isEmpty()){
+            throw BizException.wrap("您下载的文件不存在！");
+        }
+
+        // 对象转换
+        List<FileDO> fileDOList = list.stream().map((file)->FileDO.builder()
+                .url(file.getUrl())
+                .submittedFileName(file.getSubmittedFileName())
+                .size(file.getSize())
+                .dataType(file.getDataType()).build()).collect(Collectors.toList());
+
+        fileBiz.down(fileDOList,request,response);
     }
 }

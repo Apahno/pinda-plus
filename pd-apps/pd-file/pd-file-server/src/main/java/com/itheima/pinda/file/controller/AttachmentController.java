@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * 文件服务附件处理控制器
  */
@@ -92,4 +95,12 @@ public class AttachmentController extends BaseController {
                 dto.getBizType());
         return success(true);
     }
+
+    @ApiOperation(value = "根据文件ids打包下载")
+    @GetMapping(value = "/download",produces = "application/octet-stream")
+    // produces = "application/octet-stream" 表示向客户端写回的是二进制流的形式
+    public void download(@RequestParam(value ="ids[]" ) Long[] ids, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        attachmentService.download(request,response,ids);
+    }
+
 }
