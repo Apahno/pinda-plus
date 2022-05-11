@@ -31,4 +31,8 @@ public interface FileMapper extends BaseMapper<File> {
                                                   @Param("dataType") String dataType,
                                                   @Param("startTime") LocalDateTime startTime,
                                                   @Param("endTime") LocalDateTime endTime);
+
+    List<FileStatisticsDO> findDownTop20(Long userId);
+
+    List<FileStatisticsDO> findDownSizeByDate(Long userId, String dateType, LocalDateTime startTime, LocalDateTime endTime);
 }

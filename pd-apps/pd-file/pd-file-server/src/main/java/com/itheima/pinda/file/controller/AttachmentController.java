@@ -1,14 +1,18 @@
 package com.itheima.pinda.file.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.pinda.base.BaseController;
 import com.itheima.pinda.base.R;
 import com.itheima.pinda.file.dto.AttachmentDTO;
 import com.itheima.pinda.file.dto.AttachmentRemoveDTO;
+import com.itheima.pinda.file.dto.AttachmentResultDTO;
+import com.itheima.pinda.file.dto.FilePageReqDTO;
+import com.itheima.pinda.file.entity.Attachment;
 import com.itheima.pinda.file.service.AttachmentService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import com.itheima.pinda.utils.BizAssert;
+import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.List;
+
+import static com.itheima.pinda.exception.code.ExceptionCode.BASE_VALID_PARAM;
 
 /**
  * 文件服务附件处理控制器
@@ -103,4 +111,55 @@ public class AttachmentController extends BaseController {
         attachmentService.download(request,response,ids);
     }
 
+    /**
+     * 根据业务类型或者业务id其中之一，或者2个同时打包下载文件
+     *
+     * @param bizIds   业务id
+     * @param bizTypes 业务类型
+     *
+     */
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "bizIds[]", value = "业务id数组", dataType = "array", paramType = "query"),
+            @ApiImplicitParam(name = "bizTypes[]", value = "业务类型数组", dataType = "array", paramType = "query"),
+    })
+    @ApiOperation(value = "根据业务类型/业务id打包下载", notes = "根据业务id下载一个文件或多个文件打包下载")
+    // produces = "application/octet-stream" 转化为二进制流
+    @GetMapping(value = "/download/biz", produces = "application/octet-stream")
+    public void downloadByBiz(
+            @RequestParam(value = "bizIds[]", required = false) String[] bizIds,
+            @RequestParam(value = "bizTypes[]", required = false) String[] bizTypes,
+            HttpServletRequest request, HttpServletResponse response) throws Exception {
+        BizAssert.isTrue(!(ArrayUtils.isEmpty(bizTypes) && ArrayUtils.isEmpty(bizIds)), BASE_VALID_PARAM.build("附件业务id和业务类型不能同时为空"));
+        attachmentService.downloadByBiz(request, response, bizTypes, bizIds);
+    }
+
+    /**
+     * 分页查询附件
+     */
+    @ApiOperation(value = "分页查询附件", notes = "分页查询附件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "current", value = "当前页", dataType = "long", paramType = "query", defaultValue = "1"),
+            @ApiImplicitParam(name = "size", value = "每页显示几条", dataType = "long", paramType = "query", defaultValue = "10"),
+    })
+    @GetMapping(value = "/page")
+    public R<IPage<Attachment>> page(FilePageReqDTO data) {
+        Page<Attachment> page = getPage();
+        attachmentService.page(page, data);
+        return success(page);
+    }
+
+    /**
+     * 根据业务类型和业务id查询附件
+     */
+    @ApiOperation(value = "查询附件", notes = "查询附件")
+    @ApiResponses(
+            @ApiResponse(code = 60103, message = "文件id为空")
+    )
+    @GetMapping
+    public R<List<AttachmentResultDTO>> findAttachment(@RequestParam(value = "bizTypes", required = false) String[] bizTypes,
+                                                       @RequestParam(value = "bizIds", required = false) String[] bizIds) {
+        //不能同时为空
+        BizAssert.isTrue(!(ArrayUtils.isEmpty(bizTypes) && ArrayUtils.isEmpty(bizIds)), BASE_VALID_PARAM.build("业务类型不能为空"));
+        return success(attachmentService.find(bizTypes, bizIds));
+    }
 }

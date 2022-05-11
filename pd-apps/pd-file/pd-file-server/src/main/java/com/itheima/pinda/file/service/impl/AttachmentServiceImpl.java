@@ -1,16 +1,22 @@
 package com.itheima.pinda.file.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.ArrayUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.itheima.pinda.base.R;
 import com.itheima.pinda.base.id.IdGenerate;
 import com.itheima.pinda.database.mybatis.conditions.Wraps;
+import com.itheima.pinda.database.mybatis.conditions.query.LbqWrapper;
 import com.itheima.pinda.dozer.DozerUtils;
 import com.itheima.pinda.exception.BizException;
 import com.itheima.pinda.file.dao.AttachmentMapper;
 import com.itheima.pinda.file.domain.FileDO;
 import com.itheima.pinda.file.domain.FileDeleteDO;
 import com.itheima.pinda.file.dto.AttachmentDTO;
+import com.itheima.pinda.file.dto.AttachmentResultDTO;
+import com.itheima.pinda.file.dto.FilePageReqDTO;
 import com.itheima.pinda.file.entity.Attachment;
 import com.itheima.pinda.file.entity.File;
 import com.itheima.pinda.file.properties.FileServerProperties;
@@ -26,9 +32,12 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.itheima.pinda.database.mybatis.conditions.Wraps.lbQ;
 
 @Service
 @Slf4j
@@ -152,13 +161,49 @@ public class AttachmentServiceImpl extends ServiceImpl<AttachmentMapper,Attachme
         if(list.isEmpty()){
             throw BizException.wrap("您下载的文件不存在！");
         }
+        down(list,request,response);
+    }
 
-        // 对象转换
-        List<FileDO> fileDOList = list.stream().map((file)->FileDO.builder()
-                .url(file.getUrl())
-                .submittedFileName(file.getSubmittedFileName())
-                .size(file.getSize())
-                .dataType(file.getDataType()).build()).collect(Collectors.toList());
+    @Override
+    public void downloadByBiz(HttpServletRequest request, HttpServletResponse response, String[] bizTypes, String[] bizIds) throws Exception {
+        List<Attachment> list = super.list(Wraps.<Attachment>lbQ()
+                .in(Attachment::getBizType, bizTypes)
+                .in(Attachment::getBizId, bizIds));
+
+        down(list,request,response);
+    }
+
+    @Override
+    public IPage<Attachment> page(Page<Attachment> page, FilePageReqDTO data) {
+        Attachment attachment = dozerUtils.map(data, Attachment.class);
+
+        // ${ew.customSqlSegment} 语法一定要手动eq like 等 不能用lbQ!
+        LbqWrapper<Attachment> wrapper = Wraps.<Attachment>lbQ()
+                .like(Attachment::getSubmittedFileName, attachment.getSubmittedFileName())
+                .like(Attachment::getBizType, attachment.getBizType())
+                .like(Attachment::getBizId, attachment.getBizId())
+                .eq(Attachment::getDataType, attachment.getDataType())
+                .orderByDesc(Attachment::getId);
+
+        return baseMapper.page(page,wrapper);
+    }
+
+    @Override
+    public List<AttachmentResultDTO> find(String[] bizTypes, String[] bizIds) {
+        return baseMapper.find(bizTypes,bizIds);
+    }
+
+    public void down(List<Attachment> list ,HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        List<FileDO> fileDOList = new ArrayList<>();
+        for (Attachment file : list) {
+            FileDO build = FileDO.builder()
+                    .url(file.getUrl())
+                    .submittedFileName(file.getSubmittedFileName())
+                    .size(file.getSize())
+                    .dataType(file.getDataType()).build();
+            fileDOList.add(build);
+        }
 
         fileBiz.down(fileDOList,request,response);
     }
