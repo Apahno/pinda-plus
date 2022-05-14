@@ -10,6 +10,8 @@ import com.itheima.pinda.file.properties.FileServerProperties;
 import com.itheima.pinda.file.strategy.FileStrategy;
 import com.itheima.pinda.file.utils.FileDataTypeUtil;
 import com.itheima.pinda.utils.DateUtils;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidPortException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -110,7 +112,7 @@ public abstract class AbstractFileStrategy implements FileStrategy
      * 文件删除的抽象方法，需要当前类的子类来实现
      * @param fileDeleteDO
      */
-    public abstract void delete(FileDeleteDO fileDeleteDO);
+    public abstract void delete(FileDeleteDO fileDeleteDO) throws InvalidPortException, InvalidEndpointException, Exception;
 
     /**
      * 获取下载地址前缀
