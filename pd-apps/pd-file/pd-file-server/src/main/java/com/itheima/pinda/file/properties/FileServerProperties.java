@@ -41,6 +41,11 @@ public class FileServerProperties {
     }
 
     /**
+     * 分片上传时临时存放目录
+     */
+    private String storagePath;
+
+    /**
      * 不同上传路径的配置对象
      */
     private Properties local;
