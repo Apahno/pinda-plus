@@ -14,6 +14,7 @@ import com.itheima.pinda.file.service.AttachmentService;
 import com.itheima.pinda.utils.BizAssert;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ import static com.itheima.pinda.exception.code.ExceptionCode.BASE_VALID_PARAM;
 @RequestMapping("/attachment")
 @Slf4j
 @Api(value = "附件",tags = "附件")
+@MapperScan(basePackages = "com.itheima.pinda.file.storage")
 public class AttachmentController extends BaseController {
     //    注入接口
     @Autowired

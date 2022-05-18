@@ -37,7 +37,8 @@ public class WebUploader {
             return null;
         }
         // 构造需要上传的分片文件对应的路径
-        return new File(String.valueOf(fileUploadDTO.getChunk()));
+        String newFileName = String.valueOf(fileUploadDTO.getChunk());
+        return new java.io.File(path, newFileName);
     }
 
     public boolean createFileFolder(String file,boolean hasTmp){
@@ -45,7 +46,7 @@ public class WebUploader {
         if(!tmpFile.exists()){
             // 不存在，直接创建目录
             try {
-                tmpFile.mkdir();
+                tmpFile.mkdirs();
             }catch (Exception e){
                 log.error("创建分片所在目录失败",e);
                 return false;

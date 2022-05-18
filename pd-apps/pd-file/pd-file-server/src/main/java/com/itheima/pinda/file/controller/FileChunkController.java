@@ -62,7 +62,7 @@ public class FileChunkController extends BaseController {
             // 获取配置的存放分片的临时目录
             String uploadFolder = FileDataTypeUtil.getUploadPathPrefix(storagePath);
             // 为需要上传的分片文件准备对应的存储位置
-            java.io.File targetFile = webUploader.getReadySpace(fileUploadDTO, storagePath);
+            java.io.File targetFile = webUploader.getReadySpace(fileUploadDTO, uploadFolder);
 
             if(targetFile==null){
                 return this.fail("分片上传失败");

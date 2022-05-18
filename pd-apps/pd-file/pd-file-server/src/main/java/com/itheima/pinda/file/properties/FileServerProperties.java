@@ -45,6 +45,14 @@ public class FileServerProperties {
      */
     private String storagePath;
 
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
+    }
+
     /**
      * 不同上传路径的配置对象
      */
